@@ -1,0 +1,37 @@
+{
+  "name": "moonshine-node",
+  "version": "1.0.0",
+  "description": "On-device speech-to-text CLI for Node.js using Moonshine models",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "moonshine": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "list-devices": "node index.js --list-devices"
+  },
+  "keywords": [
+    "moonshine",
+    "speech-to-text",
+    "stt",
+    "voice",
+    "cli",
+    "nodejs",
+    "on-device",
+    "vad"
+  ],
+  "author": "RangerMauve",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RangerMauve/moonshine-node.git"
+  },
+  "dependencies": {
+    "@gooney-001/ten-vad-lib": "^1.0.2",
+    "@mastra/node-audio": "^0.1.7",
+    "llama-tokenizer-js": "^1.2.2",
+    "onnxruntime-node": "^1.22.0"
+  }
+}
