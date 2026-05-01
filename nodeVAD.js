@@ -3,15 +3,15 @@
  * Uses TEN VAD model for voice activity detection
  */
 
-import loadTENVAD from '@gooney-001/ten-vad-lib';
+import loadTENVAD from "@gooney-001/ten-vad-lib";
 
 export const defaultVADOptions = {
   positiveSpeechThreshold: 0.5,
-  negativeSpeechThreshold: 0.35,  // 0.15 less than positive
-  redemptionFrames: 8,            // Frames to wait before confirming speech end
-  frameSize: 256,                 // TEN VAD frame size
-  preSpeechPadFrames: 32,         // Frames to keep before speech start (~512ms at 16kHz)
-  minSpeechFrames: 20,            // Minimum frames to consider valid speech
+  negativeSpeechThreshold: 0.35, // 0.15 less than positive
+  redemptionFrames: 8, // Frames to wait before confirming speech end
+  frameSize: 256, // TEN VAD frame size
+  preSpeechPadFrames: 32, // Frames to keep before speech start (~512ms at 16kHz)
+  minSpeechFrames: 20, // Minimum frames to consider valid speech
 };
 
 /**
@@ -29,7 +29,7 @@ export class NodeVAD {
   #verbose;
 
   #speaking;
-  #audioBuffer;  // Array of { frame: Float32Array, isSpeech: boolean }
+  #audioBuffer; // Array of { frame: Float32Array, isSpeech: boolean }
   #redemptionCounter;
   #speechFrameCount;
   #active;
@@ -38,11 +38,18 @@ export class NodeVAD {
 
   constructor(options = {}) {
     this.#frameSize = options.frameSize || defaultVADOptions.frameSize;
-    this.#positiveThreshold = options.positiveSpeechThreshold || defaultVADOptions.positiveSpeechThreshold;
-    this.#negativeThreshold = options.negativeSpeechThreshold || defaultVADOptions.negativeSpeechThreshold;
-    this.#redemptionFrames = options.redemptionFrames || defaultVADOptions.redemptionFrames;
-    this.#preSpeechPadFrames = options.preSpeechPadFrames || defaultVADOptions.preSpeechPadFrames;
-    this.#minSpeechFrames = options.minSpeechFrames || defaultVADOptions.minSpeechFrames;
+    this.#positiveThreshold =
+      options.positiveSpeechThreshold ||
+      defaultVADOptions.positiveSpeechThreshold;
+    this.#negativeThreshold =
+      options.negativeSpeechThreshold ||
+      defaultVADOptions.negativeSpeechThreshold;
+    this.#redemptionFrames =
+      options.redemptionFrames || defaultVADOptions.redemptionFrames;
+    this.#preSpeechPadFrames =
+      options.preSpeechPadFrames || defaultVADOptions.preSpeechPadFrames;
+    this.#minSpeechFrames =
+      options.minSpeechFrames || defaultVADOptions.minSpeechFrames;
     this.#verbose = options.verbose || false;
 
     this.#callbacks = {
@@ -69,14 +76,14 @@ export class NodeVAD {
     const result = this.#vadModule._ten_vad_create(
       vadHandlePtr,
       this.#frameSize,
-      0.5  // Internal threshold (we do our own thresholding)
+      0.5 // Internal threshold (we do our own thresholding)
     );
 
     if (result !== 0) {
       throw new Error(`Failed to create VAD instance: ${result}`);
     }
 
-    this.#vadHandle = this.#vadModule.getValue(vadHandlePtr, 'i32');
+    this.#vadHandle = this.#vadModule.getValue(vadHandlePtr, "i32");
     this.#vadModule._free(vadHandlePtr);
   }
 
@@ -153,14 +160,14 @@ export class NodeVAD {
     }, 0);
 
     if (speechFrameCount >= this.#minSpeechFrames) {
-      const audio = this.#concatArrays(audioBuffer.map(item => item.frame));
+      const audio = this.#concatArrays(audioBuffer.map((item) => item.frame));
       this.#callbacks.onVoiceEnd(audio);
     }
     // Otherwise it's a misfire, silently ignore
   }
 
   #getSpeechAudio() {
-    const speechFrames = this.#audioBuffer.map(item => item.frame);
+    const speechFrames = this.#audioBuffer.map((item) => item.frame);
     return this.#concatArrays(speechFrames);
   }
 
@@ -197,7 +204,7 @@ export class NodeVAD {
 
     let probability = 0;
     if (result === 0) {
-      probability = this.#vadModule.getValue(probPtr, 'float');
+      probability = this.#vadModule.getValue(probPtr, "float");
     }
 
     this.#vadModule._free(audioPtr);
@@ -210,7 +217,7 @@ export class NodeVAD {
   destroy() {
     if (this.#vadHandle) {
       const vadHandlePtr = this.#vadModule._malloc(4);
-      this.#vadModule.setValue(vadHandlePtr, this.#vadHandle, 'i32');
+      this.#vadModule.setValue(vadHandlePtr, this.#vadHandle, "i32");
       this.#vadModule._ten_vad_destroy(vadHandlePtr);
       this.#vadModule._free(vadHandlePtr);
     }

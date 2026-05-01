@@ -43,15 +43,15 @@ npx moonshine --verbose
 
 ## Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--help` | Show help message | - |
-| `--list-devices` | List available audio input devices | - |
-| `--device` | ALSA device name | `default` |
-| `--model` | Model to use (`tiny` or `base`) | `tiny` |
-| `--streaming` | Enable streaming/partial updates | `false` |
-| `--once` | Transcribe one sentence and exit | `false` |
-| `--verbose` | Show detailed logs | `false` |
+| Option           | Description                        | Default   |
+| ---------------- | ---------------------------------- | --------- |
+| `--help`         | Show help message                  | -         |
+| `--list-devices` | List available audio input devices | -         |
+| `--device`       | ALSA device name                   | `default` |
+| `--model`        | Model to use (`tiny` or `base`)    | `tiny`    |
+| `--streaming`    | Enable streaming/partial updates   | `false`   |
+| `--once`         | Transcribe one sentence and exit   | `false`   |
+| `--verbose`      | Show detailed logs                 | `false`   |
 
 ## Controls
 

@@ -5,12 +5,15 @@
   "type": "module",
   "main": "index.js",
   "bin": {
-    "moonshine": "./index.js"
+    "moonshine-node": "./src/bin.js"
   },
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
-    "list-devices": "node index.js --list-devices"
+    "start": "node src/bin.js",
+    "dev": "node src/bin.js",
+    "list-devices": "node src/bin.js --list-devices",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "test": "node --test"
   },
   "keywords": [
     "moonshine",
@@ -33,5 +36,10 @@
     "@mastra/node-audio": "^0.1.7",
     "llama-tokenizer-js": "^1.2.2",
     "onnxruntime-node": "^1.22.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3"
   }
 }

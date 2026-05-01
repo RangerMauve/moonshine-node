@@ -5,16 +5,16 @@
  * Uses TEN VAD for voice activity detection in Node.js environment.
  */
 
-import { NodeVAD } from './nodeVAD.js';
-import { getMicrophoneStream } from '@mastra/node-audio';
-import { NodeMoonshineModel } from './nodeMoonshineModel.js';
+import { NodeVAD } from "./nodeVAD.js";
+import { getMicrophoneStream } from "@mastra/node-audio";
+import { NodeMoonshineModel } from "./nodeMoonshineModel.js";
 
 // VAD settings (matching vad-moonshine defaults)
 const TEN_VAD_THRESHOLD = 0.5;
 const TEN_VAD_FRAME_SIZE = 256;
 const VAD_REDEMPTION_FRAMES = 8;
-const VAD_PRE_SPEECH_PAD_FRAMES = 32;  // ~512ms of pre-speech padding
-const VAD_MIN_SPEECH_FRAMES = 20;      // Minimum frames for valid speech
+const VAD_PRE_SPEECH_PAD_FRAMES = 32; // ~512ms of pre-speech padding
+const VAD_MIN_SPEECH_FRAMES = 20; // Minimum frames for valid speech
 const SPEECH_MAX_DURATION_MS = 30000;
 const STT_MINIMUM_INTERVAL_MS = 200;
 
@@ -34,15 +34,15 @@ const STT_MINIMUM_INTERVAL_MS = 200;
 
 /** @type {NodeTranscriberCallbacks} */
 const defaultCallbacks = {
-  onError: (error) => console.error('Error:', error),
-  onModelLoadStarted: () => console.log('Loading models...'),
-  onModelLoaded: () => console.log('Models loaded, ready to transcribe'),
-  onTranscribeStarted: () => console.log('Transcription started'),
-  onTranscribeStopped: () => console.log('Transcription stopped'),
-  onTranscriptionUpdated: (text) => console.log('Partial:', text),
-  onTranscriptionCommitted: (text) => console.log('Transcript:', text),
-  onSpeechStart: () => console.log('Speech started'),
-  onSpeechEnd: () => console.log('Speech ended'),
+  onError: (error) => console.error("Error:", error),
+  onModelLoadStarted: () => console.log("Loading models..."),
+  onModelLoaded: () => console.log("Models loaded, ready to transcribe"),
+  onTranscribeStarted: () => console.log("Transcription started"),
+  onTranscribeStopped: () => console.log("Transcription stopped"),
+  onTranscriptionUpdated: (text) => console.log("Partial:", text),
+  onTranscriptionCommitted: (text) => console.log("Transcript:", text),
+  onSpeechStart: () => console.log("Speech started"),
+  onSpeechEnd: () => console.log("Speech ended"),
   onSpeechContinuing: () => {},
 };
 
@@ -68,7 +68,13 @@ export class NodeMicTranscriber {
    * @param {string} [device='default']
    * @param {boolean} [verbose=false]
    */
-  constructor(modelURL = 'model/tiny', callbacks = {}, partialUpdates = true, device = 'default', verbose = false) {
+  constructor(
+    modelURL = "model/tiny",
+    callbacks = {},
+    partialUpdates = true,
+    device = "default",
+    verbose = false
+  ) {
     this.#callbacks = { ...defaultCallbacks, ...callbacks };
     this.#partialUpdates = partialUpdates;
     this.#isActive = false;
@@ -77,9 +83,9 @@ export class NodeMicTranscriber {
     this.#micStream = null;
     this.#device = device;
     this.#verbose = verbose;
-    
+
     // Create model instance directly
-    this.#model = new NodeMoonshineModel(modelURL, 'quantized', verbose);
+    this.#model = new NodeMoonshineModel(modelURL, "quantized", verbose);
 
     this.#vad = new NodeVAD({
       onVoiceStart: (audio) => this.#onVoiceStart(audio),
@@ -96,7 +102,7 @@ export class NodeMicTranscriber {
 
   async load() {
     this.#callbacks.onModelLoadStarted();
-    
+
     await this.#model.loadModel();
     await this.#vad.load();
     this.#callbacks.onModelLoaded();
@@ -121,7 +127,8 @@ export class NodeMicTranscriber {
 
     // Get microphone stream with optional device selection
     const micOptions = { rate: 16000, device: this.#device };
-    if (this.#verbose) console.log(`[Transcriber] Using audio device: ${this.#device}`);
+    if (this.#verbose)
+      console.log(`[Transcriber] Using audio device: ${this.#device}`);
 
     this.#micStream = getMicrophoneStream(micOptions);
 
@@ -130,11 +137,11 @@ export class NodeMicTranscriber {
       process.stderr.write = originalStderrWrite;
     }
 
-    this.#micStream.on('data', (chunk) => {
+    this.#micStream.on("data", (chunk) => {
       this.#onAudioData(chunk);
     });
 
-    this.#micStream.on('error', (err) => {
+    this.#micStream.on("error", (err) => {
       this.#callbacks.onError(err);
     });
   }
@@ -142,7 +149,7 @@ export class NodeMicTranscriber {
   stop() {
     this.#isActive = false;
     this.#callbacks.onTranscribeStopped();
-    
+
     if (this.#micStream) {
       this.#micStream.destroy();
       this.#micStream = null;
@@ -150,10 +157,17 @@ export class NodeMicTranscriber {
   }
 
   #onAudioData(chunk) {
-    if (this.#verbose) console.log(`[Audio] Received chunk: ${chunk.length} bytes = ${chunk.length/2} samples`);
+    if (this.#verbose)
+      console.log(
+        `[Audio] Received chunk: ${chunk.length} bytes = ${chunk.length / 2} samples`
+      );
 
     const float32Audio = new Float32Array(chunk.length / 2);
-    const int16Data = new Int16Array(chunk.buffer, chunk.byteOffset, chunk.length / 2);
+    const int16Data = new Int16Array(
+      chunk.buffer,
+      chunk.byteOffset,
+      chunk.length / 2
+    );
 
     for (let i = 0; i < int16Data.length; i++) {
       float32Audio[i] = int16Data[i] / 32768.0;
@@ -169,45 +183,61 @@ export class NodeMicTranscriber {
 
   #onVoiceEnd(audio) {
     const localAudioBuffer = Float32Array.from(audio);
-    if (this.#verbose) console.log(`[Transcriber] onVoiceEnd: ${localAudioBuffer.length} samples`);
+    if (this.#verbose)
+      console.log(
+        `[Transcriber] onVoiceEnd: ${localAudioBuffer.length} samples`
+      );
 
     // Check audio stats
     const maxVal = Math.max(...Array.from(localAudioBuffer).map(Math.abs));
     const minVal = Math.min(...Array.from(localAudioBuffer));
-    const meanVal = localAudioBuffer.reduce((a, b) => a + Math.abs(b), 0) / localAudioBuffer.length;
-    if (this.#verbose) console.log(`[Transcriber] Audio stats: max=${maxVal.toFixed(4)}, min=${minVal.toFixed(4)}, mean=${meanVal.toFixed(4)}`);
+    const meanVal =
+      localAudioBuffer.reduce((a, b) => a + Math.abs(b), 0) /
+      localAudioBuffer.length;
+    if (this.#verbose)
+      console.log(
+        `[Transcriber] Audio stats: max=${maxVal.toFixed(4)}, min=${minVal.toFixed(4)}, mean=${meanVal.toFixed(4)}`
+      );
 
     // Skip if audio amplitude is too low (likely silence/noise)
     if (maxVal < 0.01) {
-      if (this.#verbose) console.log(`[Transcriber] Skipping - audio amplitude too low (max=${maxVal.toFixed(4)})`);
+      if (this.#verbose)
+        console.log(
+          `[Transcriber] Skipping - audio amplitude too low (max=${maxVal.toFixed(4)})`
+        );
       return;
     }
 
     this.#callbacks.onSpeechEnd(localAudioBuffer);
     this.#isSttRunning = true;
-    
-    this.#model?.generate(localAudioBuffer).then((text) => {
-      if (this.#verbose) console.log(`[Transcriber] Transcription result: "${text}"`);
-      this.#callbacks.onTranscriptionCommitted(text, localAudioBuffer);
-      this.#lastSttFinishedTimeMs = Date.now();
-      this.#isSttRunning = false;
-    }).catch(err => {
-      console.error(`[Transcriber] Transcription error:`, err);
-      this.#callbacks.onError(err);
-      this.#isSttRunning = false;
-    });
+
+    this.#model
+      ?.generate(localAudioBuffer)
+      .then((text) => {
+        if (this.#verbose)
+          console.log(`[Transcriber] Transcription result: "${text}"`);
+        this.#callbacks.onTranscriptionCommitted(text, localAudioBuffer);
+        this.#lastSttFinishedTimeMs = Date.now();
+        this.#isSttRunning = false;
+      })
+      .catch((err) => {
+        console.error(`[Transcriber] Transcription error:`, err);
+        this.#callbacks.onError(err);
+        this.#isSttRunning = false;
+      });
   }
 
   #onVoiceContinuing(audio) {
     const localAudioBuffer = Float32Array.from(audio);
     this.#callbacks.onSpeechContinuing(localAudioBuffer);
-    
+
     if (this.#isSttRunning || !this.#partialUpdates) {
       return;
     }
 
     const currentTimeMs = Date.now();
-    const timeSinceLastSttFinishedMs = currentTimeMs - this.#lastSttFinishedTimeMs;
+    const timeSinceLastSttFinishedMs =
+      currentTimeMs - this.#lastSttFinishedTimeMs;
 
     if (timeSinceLastSttFinishedMs > 10000) {
       this.#isSttRunning = false;
@@ -218,14 +248,17 @@ export class NodeMicTranscriber {
     }
 
     this.#isSttRunning = true;
-    this.#model?.generate(localAudioBuffer).then((text) => {
-      this.#callbacks.onTranscriptionUpdated(text, localAudioBuffer);
-      this.#isSttRunning = false;
-      this.#lastSttFinishedTimeMs = Date.now();
-    }).catch(err => {
-      this.#callbacks.onError(err);
-      this.#isSttRunning = false;
-    });
+    this.#model
+      ?.generate(localAudioBuffer)
+      .then((text) => {
+        this.#callbacks.onTranscriptionUpdated(text, localAudioBuffer);
+        this.#isSttRunning = false;
+        this.#lastSttFinishedTimeMs = Date.now();
+      })
+      .catch((err) => {
+        this.#callbacks.onError(err);
+        this.#isSttRunning = false;
+      });
   }
 
   destroy() {
