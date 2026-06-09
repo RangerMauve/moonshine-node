@@ -1,6 +1,6 @@
 {
   "name": "moonshine-node",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "On-device speech-to-text CLI for Node.js using Moonshine models",
   "type": "module",
   "main": "index.js",
