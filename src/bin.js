@@ -7,7 +7,8 @@
  * Uses @mastra/node-audio for microphone input and TEN VAD for voice detection.
  *
  * Usage:
- *   moonshine-node              # Start transcription
+ *   moonshine-node              # Start transcription from microphone
+ *   moonshine-node --file foo.wav  # Transcribe a WAV file
  *   moonshine-node --help       # Show help
  *   moonshine-node --list-devices  # List available audio devices
  *
@@ -17,7 +18,8 @@
 
 import { execSync } from "node:child_process";
 import { parseArgs } from "node:util";
-import { NodeMicTranscriber } from "../nodeTranscriber.js";
+import { NodeMicTranscriber } from "./nodeTranscriber.js";
+import { transcribeFile } from "./fileTranscriber.js";
 
 // List available audio devices (Linux only)
 function listDevices() {
@@ -110,6 +112,7 @@ Usage:
 Options:
   --help           Show this help message
   --list-devices   List available audio input devices
+  --file           WAV file to transcribe (instead of microphone)
   --device         ALSA device name (e.g., "sysdefault:CARD=Mini") [default: "default"]
   --model          Model to use (tiny, base) [default: tiny]
   --streaming      Enable streaming/partial updates [default: false]
@@ -121,6 +124,7 @@ Controls:
 
 Example:
   moonshine-node
+  moonshine-node --file audio.wav
   moonshine-node --model base --streaming
   moonshine-node --once
 `);
@@ -134,6 +138,7 @@ async function main() {
     options: {
       help: { type: "boolean", short: "h" },
       "list-devices": { type: "boolean" },
+      file: { type: "string" },
       device: { type: "string" },
       model: { type: "string", default: "tiny" },
       streaming: { type: "boolean" },
@@ -151,6 +156,21 @@ async function main() {
   // Handle help flag
   if (values.help) {
     showHelp();
+  }
+
+  // Transcribe file if --file is provided
+  if (values.file) {
+    if (values.verbose) {
+      console.log("🌙 Moonshine Node.js CLI");
+      console.log(`File: ${values.file}`);
+      console.log(`Model: ${values.model}`);
+      console.log("");
+    }
+
+    const modelURL = values.model === "base" ? "model/base" : "model/tiny";
+    const text = await transcribeFile(values.file, modelURL, values.verbose);
+    console.log(text || "");
+    process.exit(0);
   }
 
   // Map model name to URL
